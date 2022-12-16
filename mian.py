@@ -1,14 +1,10 @@
-import customtkinter
+import customtkinter as ctk
 
-# root =
+root = ctk.CTk()
+root.geometry("500x300")
 
-class root():
-    def __init__(self):
-        pass
-
-
-
-
+frame = ctk.CTkFrame(master=root)
+frame.pack(pady=1, padx=100, fill="x", expand=True)
 
 if __name__ == "__main__":
-    pass
+    root.mainloop()
