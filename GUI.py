@@ -158,6 +158,11 @@ class main_window(customtkinter.CTk):
         self.canvas1.get_tk_widget().place(relx=0.5, rely=0.5, anchor="center")
 
 
+    def UpdateLabel(self):
+        pass
+        # self.label_Direction.configure(text=str)
+
+
 if __name__ == "__main__":
     app = main_window()
     app.mainloop()
