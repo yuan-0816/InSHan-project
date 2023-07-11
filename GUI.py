@@ -1,9 +1,11 @@
 import customtkinter
+from CTkMessagebox import CTkMessagebox
 from tkinter.filedialog import askopenfile
 import cv2
 from PIL import Image, ImageTk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import os
 
 
 customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
@@ -14,16 +16,17 @@ class main_window(customtkinter.CTk):
     def __init__(self):
         super().__init__()
         self.FileName = ""
+        self.IsOpenFile = False
 
         FontStyle = customtkinter.CTkFont(size=20, family="Arial")
 
         self.title("影像辨識與車流偵測")
         self.geometry(f"{1440}x{720}")
         self.iconbitmap('icon.ico')
-        self.resizable(False, False)
+        # self.resizable(False, False)
 
-        self.grid_columnconfigure((0), weight=1)
-        self.grid_rowconfigure((1), weight=1)
+        self.grid_columnconfigure((0), weight=2)
+        self.grid_rowconfigure((1), weight=2)
 
         # Show Result Frame
         self.ResultFrame = customtkinter.CTkFrame(self)
@@ -94,23 +97,42 @@ class main_window(customtkinter.CTk):
 
         # Play Video Frame
         self.PlayVideoFrame = customtkinter.CTkFrame(self)
-        self.PlayVideoFrame.grid(row=0, column=0, rowspan=3, padx=10, pady=10, sticky="nswe")
+        self.PlayVideoFrame.grid(row=0, column=0, rowspan=2, padx=10, pady=10, sticky="nswe")
 
         self.label_Video = customtkinter.CTkLabel(self.PlayVideoFrame, text="請選擇影片", font=customtkinter.CTkFont(size=20, family="Arial"))
         self.label_Video.place(relx=0.5, rely=0.5, anchor="center")
 
         # Result Graph Frame
         self.ResultGraphFrame = customtkinter.CTkFrame(self)
-        self.ResultGraphFrame.grid(row=1, column=1, padx=10, pady=10, sticky="nswe")
+        self.ResultGraphFrame.grid(row=1, column=1, rowspan=2, padx=10, pady=10, sticky="nswe")
 
         self.label_GraphTitle = customtkinter.CTkLabel(self.ResultGraphFrame, text="各方向車流量", font=customtkinter.CTkFont(size=20, family="Arial", weight="bold"))
         self.label_GraphTitle.place(relx=0.5, rely=0.06, anchor='center')
         self.canvas = customtkinter.CTkCanvas(self.ResultGraphFrame, width=350, height=340)
         self.canvas.place(relx=0.5, rely=0.55, anchor="center")
 
+        # Button Frame
+        self.ButtonFrame = customtkinter.CTkFrame(self)
+        self.ButtonFrame.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
 
-        self.openbtn = customtkinter.CTkButton(self, text='open file', font=customtkinter.CTkFont(size=20, family="Arial"), command=lambda:self.open_file())
-        self.openbtn.grid(row=2, column=1, padx=10, pady=10, sticky="nswe")
+        self.OpenFileBtn = customtkinter.CTkButton(self.ButtonFrame, text='選擇影片',
+                                                   font=customtkinter.CTkFont(size=20, family="Arial"),
+                                                   command=lambda:self.open_file())
+        self.OpenFileBtn.grid(row=0, column=0, padx=10, pady=10, sticky="n")
+
+        self.OpenLiveBtn = customtkinter.CTkButton(self.ButtonFrame, text='選擇直播',
+                                               font=customtkinter.CTkFont(size=20, family="Arial"))
+        self.OpenLiveBtn.grid(row=0, column=1, padx=10, pady=10, sticky="n")
+
+        self.StartBtn = customtkinter.CTkButton(self.ButtonFrame, text='開始檢測',
+                                               font=customtkinter.CTkFont(size=20, family="Arial"),
+                                               command=lambda:self.start())
+        self.StartBtn.grid(row=0, column=2, padx=10, pady=10, sticky="n")
+
+        self.OpenPathBtn = customtkinter.CTkButton(self.ButtonFrame, text='開啟資料夾',
+                                                    font=customtkinter.CTkFont(size=20, family="Arial"),
+                                                    command=lambda:self.OpenFilePath())
+        self.OpenPathBtn.grid(row=0, column=3, padx=10, pady=10, sticky="n")
 
         # self.DrawResult()
 
@@ -119,15 +141,27 @@ class main_window(customtkinter.CTk):
         if file is not None:
             self.FileName = file.name
             print(self.FileName)
-            self.CapVideo(True)
+            self.IsOpenFile = True
 
-    def CapVideo(self, IsOpen):
-        if IsOpen is True:
+    def start(self):
+        if self.IsOpenFile:
+            self.CapVideo(True)
+        else:
+           CTkMessagebox(title="Error", message="未選擇檔案！", icon="cancel")
+
+    def CapVideo(self, IsOpenVideo):
+        if IsOpenVideo is True:
             self.cap = cv2.VideoCapture(self.FileName)
             self.label_Video.configure(text="")
             self.update()
 
     def update(self):
+        # Disabled Button
+        self.OpenFileBtn.configure(state='disabled')
+        self.OpenLiveBtn.configure(state='disabled')
+        self.StartBtn.configure(state='disabled')
+        self.OpenPathBtn.configure(state='disabled')
+
         ret, frame = self.cap.read()
         if ret == True:
             cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
@@ -140,6 +174,11 @@ class main_window(customtkinter.CTk):
         else:
             self.label_Video.configure(image="", text="請選擇影片", font=customtkinter.CTkFont(size=20, family="Arial"))
             self.DrawResult()
+            self.IsOpenFile = False
+            self.OpenFileBtn.configure(state='normal')
+            self.OpenLiveBtn.configure(state='normal')
+            self.StartBtn.configure(state='normal')
+            self.OpenPathBtn.configure(state='normal')
 
     def DrawResult(self):
         data = [8, 6, 12, 2]
@@ -157,11 +196,14 @@ class main_window(customtkinter.CTk):
         self.canvas1.draw()
         self.canvas1.get_tk_widget().place(relx=0.5, rely=0.5, anchor="center")
 
-
-    def UpdateLabel(self):
-        pass
+    def UpdateLabel(self, label, num):
+        # This is change label text method
         # self.label_Direction.configure(text=str)
+        pass
 
+    def OpenFilePath(self):
+        self.path = os.path.dirname(self.FileName)
+        os.startfile(self.path)
 
 if __name__ == "__main__":
     app = main_window()
