@@ -1,7 +1,7 @@
 # InSHan-project
 this project can make me rich>&lt;
 
-## Install ##
+## How to install ##
 
 ```
 pip install -r requirements.txt
