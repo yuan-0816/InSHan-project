@@ -208,3 +208,4 @@ class main_window(customtkinter.CTk):
 if __name__ == "__main__":
     app = main_window()
     app.mainloop()
+
